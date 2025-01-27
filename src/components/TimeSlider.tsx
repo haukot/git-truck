@@ -238,22 +238,32 @@ export default function TimeSlider() {
       }
       setIsPlaying(false)
     } else {
+      if (range[1] >= timerange[1]) {
+        const duration = range[1] - range[0]
+        const newRange: [number, number] = [timerange[0], timerange[0] + duration]
+        setRange(newRange)
+        updateTimeseries(newRange)
+      }
+
       const interval = setInterval(() => {
         setRange((prevRange) => {
           const dayInSeconds = 24 * 60 * 60
           const duration = prevRange[1] - prevRange[0]
-          const newStart = prevRange[0] + dayInSeconds * 30
-          const newEnd = newStart + duration
+          let newStart = prevRange[0] + dayInSeconds * 30
+          let newEnd = newStart + duration
 
-          if (newEnd > timerange[1]) {
+          if (newEnd >= timerange[1]) {
             clearInterval(interval)
             setIsPlaying(false)
             setPlayInterval(null)
-            return prevRange
+
+            newStart = prevRange[0] + (newEnd - timerange[1])
+            newEnd = timerange[1]
           }
 
           const newRange: [number, number] = [newStart, newEnd]
           updateTimeseries(newRange)
+
           return newRange
         })
       }, 1000)
@@ -261,7 +271,7 @@ export default function TimeSlider() {
       setPlayInterval(interval)
       setIsPlaying(true)
     }
-  }, [isPlaying, timerange, playInterval, updateTimeseries])
+  }, [isPlaying, timerange, playInterval, updateTimeseries, range])
 
   useEffect(() => {
     return () => {
