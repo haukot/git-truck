@@ -447,7 +447,7 @@ function createPartitionedHiearchy(
 
   if (chartType === "TREE_MAP") {
     const treeMapPartition = treemap<GitObject>()
-      .tile(treemapResquarify)
+      .tile(treemapResquarify) // treemapSlice в нужную сторону, но нарезается слишком мелко, не оставляет высоты. Resquarify - помогает реже двигаться тайлам
       .size([size.width, size.height])
       .paddingInner(2)
       .paddingOuter(4)
