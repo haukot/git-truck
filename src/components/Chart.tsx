@@ -1,37 +1,37 @@
+import clsx from "clsx"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapResquarify } from "d3-hierarchy"
+import ignore, { type Ignore } from "ignore"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import { memo, useDeferredValue, useEffect, useMemo } from "react"
+import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 import type { GitBlobObject, GitObject, GitTreeObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { useSearch } from "~/contexts/SearchContext"
 import { useComponentSize } from "~/hooks"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import type { DatabaseInfo } from "~/routes/$repo.$"
+import { cn, usePrefersLightMode } from "~/styling"
+import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import {
   bubblePadding,
+  circleBlobTextOffsetY,
+  circleTreeTextOffsetY,
   estimatedLetterHeightForDirText,
   estimatedLetterWidth,
-  circleTreeTextOffsetY,
+  missingInMapColor,
   treemapBlobTextOffsetX,
   treemapBlobTextOffsetY,
   treemapNodeBorderRadius,
   treemapPaddingTop,
   treemapTreeTextOffsetX,
-  circleBlobTextOffsetY,
-  treemapTreeTextOffsetY,
-  missingInMapColor
+  treemapTreeTextOffsetY
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { getTextColorFromBackground, isBlob, isTree } from "~/util"
-import clsx from "clsx"
-import type { SizeMetricType } from "~/metrics/sizeMetric"
-import { useSearch } from "~/contexts/SearchContext"
-import type { DatabaseInfo } from "~/routes/$repo.$"
-import ignore, { type Ignore } from "ignore"
-import { cn, usePrefersLightMode } from "~/styling"
-import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -287,7 +287,7 @@ function collapseText({
     textIsTooTall = () => false
   } else {
     const datum = d as HierarchyRectangularNode<GitObject>
-    textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
+    textIsTooLong = (text: string) => false //datum.x1 - datum.x0 < text.length * estimatedLetterWidth
     textIsTooTall = () => {
       const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
       return heightAvailable < estimatedLetterHeightForDirText
@@ -361,7 +361,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
-    dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
+    dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "central"
     textAnchor: isBubbleChart ? "middle" : "start",
     href: `#path-${d.data.path}`
   }

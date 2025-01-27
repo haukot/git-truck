@@ -1,15 +1,15 @@
-import { useSubmit, useNavigation } from "@remix-run/react"
-import { useMemo, useState } from "react"
-import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import { mdiCalendarArrowLeft, mdiCalendarArrowRight, mdiPlay, mdiStop } from "@mdi/js"
+import Icon from "@mdi/react"
+import { useNavigation, useSubmit } from "@remix-run/react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Handles, Rail, Slider, Tracks } from "react-compound-slider"
+import DatePicker from "react-datepicker"
+import ClipLoader from "react-spinners/ClipLoader"
+import { ArrowContainer, Popover } from "react-tiny-popover"
+import { missingInMapColor, sliderPadding } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/util"
-import ClipLoader from "react-spinners/ClipLoader"
-import { Popover, ArrowContainer } from "react-tiny-popover"
-import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
-import { missingInMapColor, sliderPadding } from "~/const"
-import Icon from "@mdi/react"
-import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
 
 function DateTags({
   range,
@@ -218,6 +218,9 @@ export default function TimeSlider() {
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playInterval, setPlayInterval] = useState<NodeJS.Timeout | null>(null)
+
   function updateTimeseries(e: readonly number[]) {
     const form = new FormData()
     form.append("timeseries", `${e[0]}-${e[1]}`)
@@ -227,8 +230,63 @@ export default function TimeSlider() {
     })
   }
 
+  const handlePlayToggle = useCallback(() => {
+    if (isPlaying) {
+      if (playInterval) {
+        clearInterval(playInterval)
+        setPlayInterval(null)
+      }
+      setIsPlaying(false)
+    } else {
+      const interval = setInterval(() => {
+        setRange((prevRange) => {
+          const dayInSeconds = 24 * 60 * 60
+          const duration = prevRange[1] - prevRange[0]
+          const newStart = prevRange[0] + dayInSeconds * 30
+          const newEnd = newStart + duration
+
+          if (newEnd > timerange[1]) {
+            clearInterval(interval)
+            setIsPlaying(false)
+            setPlayInterval(null)
+            return prevRange
+          }
+
+          const newRange: [number, number] = [newStart, newEnd]
+          updateTimeseries(newRange)
+          return newRange
+        })
+      }, 1000)
+
+      setPlayInterval(interval)
+      setIsPlaying(true)
+    }
+  }, [isPlaying, timerange, playInterval, updateTimeseries])
+
+  useEffect(() => {
+    return () => {
+      if (playInterval) {
+        clearInterval(playInterval)
+      }
+    }
+  }, [playInterval])
+
   return (
-    <div style={{ height: 60, width: "100%", textAlign: "center" }}>
+    <div style={{ height: 60, width: "100%", textAlign: "center", position: "relative" }}>
+      <button
+        className="btn btn--primary"
+        onClick={handlePlayToggle}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: "50%",
+          zIndex: 1
+        }}
+        title={isPlaying ? "Stop animation" : "Play animation"}
+      >
+        <Icon path={isPlaying ? mdiStop : mdiPlay} size={1} />
+      </button>
+
       <Slider
         mode={2}
         step={1}
