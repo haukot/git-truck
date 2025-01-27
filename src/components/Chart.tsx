@@ -361,11 +361,12 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
-    dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "central"
+    dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
     textAnchor: isBubbleChart ? "middle" : "start",
     href: `#path-${d.data.path}`
   }
 
+  // TODO: multiline? decrease text for small elements?
   return (
     <>
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
@@ -503,16 +504,17 @@ function circlePathFromCircle(x: number, y: number, r: number) {
 
 function roundedRectPathFromRect(x: number, y: number, width: number, height: number, radius: number) {
   radius = Math.min(radius, Math.floor(width / 3), Math.floor(height / 3))
-  return `M${x + radius},${y}
-          h${width - radius * 2}
-          a${radius},${radius} 0 0 1 ${radius},${radius}
-          v${height - radius * 2}
-          a${radius},${radius} 0 0 1 ${-radius},${radius}
-          h${-width + radius * 2}
-          a${radius},${radius} 0 0 1 ${-radius},${-radius}
-          v${-height + radius * 2}
-          a${radius},${radius} 0 0 1 ${radius},${-radius}
-          z`
+  // return `M${x + radius},${y}
+  //         h${width - radius * 2}
+  //         a${radius},${radius} 0 0 1 ${radius},${radius}
+  //         v${height - radius * 2}
+  //         a${radius},${radius} 0 0 1 ${-radius},${radius}
+  //         h${-width + radius * 2}
+  //         a${radius},${radius} 0 0 1 ${-radius},${-radius}
+  //         v${-height + radius * 2}
+  //         a${radius},${radius} 0 0 1 ${radius},${-radius}
+  //         z`
+  return `M${x},${y} h${width}`
 }
 
 function flatten(tree: GitTreeObject) {
