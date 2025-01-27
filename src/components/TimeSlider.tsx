@@ -266,7 +266,7 @@ export default function TimeSlider() {
 
           return newRange
         })
-      }, 1000)
+      }, 2000)
 
       setPlayInterval(interval)
       setIsPlaying(true)
